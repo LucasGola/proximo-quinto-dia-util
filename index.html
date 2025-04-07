@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>5º Dia Útil do Mês</title>
+    <title>Próximo 5º Dia Útil</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -42,9 +42,12 @@
       }
 
       .calendar-title {
-        font-size: 1.2rem;
-        margin-bottom: 0.5rem;
-        color: #333;
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+        text-transform: capitalize;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
       }
 
       .calendar {
@@ -88,20 +91,11 @@
         background: transparent;
         box-shadow: none;
       }
-
-      .calendar-title {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-        color: #2c3e50;
-        text-transform: capitalize;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-      }
     </style>
   </head>
   <body>
     <div class="card">
-      <h1>5º Dia Útil do Mês</h1>
+      <h1>Próximo 5º Dia Útil</h1>
       <div id="resultado"></div>
       <div id="explicacao"></div>
     </div>
@@ -114,7 +108,7 @@
 
     <script>
       function isBusinessDay(date) {
-        return date.getDay() !== 0; // domingo não é útil
+        return date.getDay() !== 0; // Domingo não é útil
       }
 
       function getFifthBusinessDay(year, month) {
@@ -128,6 +122,24 @@
           }
         }
         return null;
+      }
+
+      function getProximoQuintoDiaUtil(aPartirDeHoje) {
+        let ano = aPartirDeHoje.getFullYear();
+        let mes = aPartirDeHoje.getMonth();
+
+        let candidato = getFifthBusinessDay(ano, mes);
+
+        if (candidato < aPartirDeHoje) {
+          mes++;
+          if (mes > 11) {
+            mes = 0;
+            ano++;
+          }
+          candidato = getFifthBusinessDay(ano, mes);
+        }
+
+        return candidato;
       }
 
       function getMonthDaysWithPadding(year, month) {
@@ -189,16 +201,17 @@
       }
 
       const hoje = new Date();
-      const ano = hoje.getFullYear();
-      const mes = hoje.getMonth();
-      const quintoDiaUtil = getFifthBusinessDay(ano, mes);
+      const quintoDiaUtil = getProximoQuintoDiaUtil(hoje);
+      const ano = quintoDiaUtil.getFullYear();
+      const mes = quintoDiaUtil.getMonth();
+
       const options = {
         weekday: "long",
         year: "numeric",
         month: "long",
         day: "numeric",
       };
-      const nomeMes = hoje.toLocaleDateString("pt-BR", {
+      const nomeMes = quintoDiaUtil.toLocaleDateString("pt-BR", {
         month: "long",
         year: "numeric",
       });
@@ -207,10 +220,49 @@
         quintoDiaUtil.toLocaleDateString("pt-BR", options);
 
       document.getElementById("explicacao").textContent =
-        "O 5º dia útil é contado ignorando apenas domingos (sábados são considerados úteis).";
+        "O 5º dia útil é contado ignorando apenas domingos (sábados são considerados úteis). Este site sempre mostra o próximo 5º dia útil.";
 
       document.getElementById("titulo-mes").textContent =
-        nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1); // capitaliza primeira letra
+        nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+
+      // Dias restantes
+      const hojeSemHoras = new Date(
+        hoje.getFullYear(),
+        hoje.getMonth(),
+        hoje.getDate()
+      );
+      const quintoSemHoras = new Date(
+        quintoDiaUtil.getFullYear(),
+        quintoDiaUtil.getMonth(),
+        quintoDiaUtil.getDate()
+      );
+      const diffMilissegundos = quintoSemHoras - hojeSemHoras;
+      const diasRestantes = Math.ceil(
+        diffMilissegundos / (1000 * 60 * 60 * 24)
+      );
+
+      let diasMsg = "";
+
+      if (diasRestantes === 0) {
+        diasMsg = "✅ Hoje é o 5º dia útil do mês!";
+      } else if (diasRestantes > 0) {
+        diasMsg = `⏳ Faltam ${diasRestantes} dia${
+          diasRestantes > 1 ? "s" : ""
+        } para o 5º dia útil do mês.`;
+      } else {
+        const dataFormatada = quintoDiaUtil.toLocaleDateString("pt-BR", {
+          day: "numeric",
+          month: "long",
+        });
+        diasMsg = `📅 O 5º dia útil já foi, no dia ${dataFormatada}.`;
+      }
+
+      const infoExtra = document.createElement("div");
+      infoExtra.style.marginTop = "0.5rem";
+      infoExtra.style.fontWeight = "bold";
+      infoExtra.style.color = "#007BFF";
+      infoExtra.textContent = diasMsg;
+      document.querySelector(".card").appendChild(infoExtra);
 
       renderWeekHeader();
       renderCalendar(ano, mes, quintoDiaUtil);
