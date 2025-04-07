@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>5º Dia Útil do Mês</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 2rem;
+        background-color: #f0f0f0;
+        text-align: center;
+      }
+
+      .card {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        display: inline-block;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+      }
+
+      h1 {
+        color: #333;
+      }
+
+      #resultado {
+        font-size: 1.5rem;
+        margin-top: 1rem;
+        color: #007bff;
+      }
+
+      #explicacao {
+        margin-top: 1rem;
+        color: #555;
+      }
+
+      .calendar-wrapper {
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      .calendar-title {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        color: #333;
+      }
+
+      .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+      }
+
+      .calendar-header {
+        font-weight: bold;
+        color: #444;
+        padding: 0.5rem 0;
+      }
+
+      .day {
+        padding: 0.75rem;
+        border-radius: 6px;
+        background-color: #fff;
+        box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .sunday {
+        background-color: #f8d7da;
+      }
+
+      .business {
+        background-color: #d4edda;
+      }
+
+      .label {
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        color: #555;
+      }
+
+      .highlight {
+        border: 2px solid #007bff;
+      }
+
+      .day.empty {
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .calendar-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+        text-transform: capitalize;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>5º Dia Útil do Mês</h1>
+      <div id="resultado"></div>
+      <div id="explicacao"></div>
+    </div>
+
+    <div class="calendar-wrapper">
+      <div class="calendar-title" id="titulo-mes"></div>
+      <div class="calendar" id="cabecalho-semana"></div>
+      <div class="calendar" id="calendario"></div>
+    </div>
+
+    <script>
+      function isBusinessDay(date) {
+        return date.getDay() !== 0; // domingo não é útil
+      }
+
+      function getFifthBusinessDay(year, month) {
+        let count = 0;
+        for (let day = 1; day <= 31; day++) {
+          const date = new Date(year, month, day);
+          if (date.getMonth() !== month) break;
+          if (isBusinessDay(date)) {
+            count++;
+            if (count === 5) return date;
+          }
+        }
+        return null;
+      }
+
+      function getMonthDaysWithPadding(year, month) {
+        const days = [];
+        const firstDayOfMonth = new Date(year, month, 1);
+        const paddingDays = firstDayOfMonth.getDay();
+
+        for (let i = 0; i < paddingDays; i++) {
+          days.push(null);
+        }
+
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        for (let i = 1; i <= totalDays; i++) {
+          days.push(new Date(year, month, i));
+        }
+
+        return days;
+      }
+
+      function renderWeekHeader() {
+        const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        const header = document.getElementById("cabecalho-semana");
+        weekDays.forEach((day) => {
+          const div = document.createElement("div");
+          div.classList.add("calendar-header");
+          div.textContent = day;
+          header.appendChild(div);
+        });
+      }
+
+      function renderCalendar(year, month, highlightDate) {
+        const calendarDiv = document.getElementById("calendario");
+        const days = getMonthDaysWithPadding(year, month);
+
+        days.forEach((date) => {
+          const div = document.createElement("div");
+          div.classList.add("day");
+
+          if (!date) {
+            div.classList.add("empty");
+          } else if (!isBusinessDay(date)) {
+            div.classList.add("sunday");
+            div.innerHTML = `<strong>${date.getDate()}</strong><div class="label">Domingo (não útil)</div>`;
+          } else {
+            div.classList.add("business");
+            div.innerHTML = `<strong>${date.getDate()}</strong><div class="label">Dia útil</div>`;
+          }
+
+          if (
+            date &&
+            highlightDate &&
+            date.toDateString() === highlightDate.toDateString()
+          ) {
+            div.classList.add("highlight");
+          }
+
+          calendarDiv.appendChild(div);
+        });
+      }
+
+      const hoje = new Date();
+      const ano = hoje.getFullYear();
+      const mes = hoje.getMonth();
+      const quintoDiaUtil = getFifthBusinessDay(ano, mes);
+      const options = {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      };
+      const nomeMes = hoje.toLocaleDateString("pt-BR", {
+        month: "long",
+        year: "numeric",
+      });
+
+      document.getElementById("resultado").textContent =
+        quintoDiaUtil.toLocaleDateString("pt-BR", options);
+
+      document.getElementById("explicacao").textContent =
+        "O 5º dia útil é contado ignorando apenas domingos (sábados são considerados úteis).";
+
+      document.getElementById("titulo-mes").textContent =
+        nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1); // capitaliza primeira letra
+
+      renderWeekHeader();
+      renderCalendar(ano, mes, quintoDiaUtil);
+    </script>
+  </body>
+</html>
